@@ -83,7 +83,10 @@ FIELDS_NW = [
         ]
         
 FIELD_PAIRS_NW = {
-    'IFACE': FIELDS_NW[0], '^rxpck\/s': FIELDS_NW[1], }
+    'IFACE': FIELDS_NW[0], 'rxpck/s': FIELDS_NW[1], 'txpck/s': FIELDS_NW[2], 'rxkB/s': FIELDS_NW[3],
+    'txkB/s':FIELDS_NW[4], 'rxcmp/s': FIELDS_NW[5], 'txcmp/s': FIELDS_NW[6], 'rxmcst/s': FIELDS_NW[7]
+    
+    }
 
 """Restart time regexp pattern for detecting SAR restart notices"""
 PATTERN_RESTART = ".*LINUX\ RESTART.*"
