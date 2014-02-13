@@ -10,8 +10,13 @@ PART_MEM = 1
 """Indicates swap memory usage part of SAR file"""
 PART_SWP = 2
 
+
 """I/O usage part of SAR file"""
 PART_IO = 3
+
+
+""" Network part of the SAR file"""
+PART_NW = 4
 
 """CPU regexp pattern for detecting SAR section header"""
 PATTERN_CPU = ".*CPU.*(usr|user).*nice.*sys.*"
@@ -70,6 +75,15 @@ FIELD_PAIRS_IO = {
     'bread': FIELDS_IO[3], 'bwrite': FIELDS_IO[4],
 
 }
+
+""" Network stats pattern for NW section HEADER """
+PATTERN_NW = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s"
+FIELDS_NW = [
+        '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
+        ]
+        
+FIELD_PAIRS_NW = {
+    'IFACE': FIELDS_NW[0], '^rxpck\/s': FIELDS_NW[1], }
 
 """Restart time regexp pattern for detecting SAR restart notices"""
 PATTERN_RESTART = ".*LINUX\ RESTART.*"
