@@ -44,6 +44,9 @@ class Parser(object):
         '''Swap usage indexes'''
         self.__io_fields = None
         '''I/O usage indexes'''
+        
+        self.__nw_fields = None
+        ''' N/w usage indices '''
 
         return None
 
@@ -60,7 +63,7 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage = \
+            cpu_usage, mem_usage, swp_usage, io_usage, nw_usage = \
                 self._parse_file(searchunks)
 
             if (cpu_usage is False):
@@ -231,6 +234,7 @@ class Parser(object):
         mem_usage = ''
         swp_usage = ''
         io_usage = ''
+        nw_usage = ''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -240,6 +244,7 @@ class Parser(object):
             mem_pattern = re.compile(PATTERN_MEM)
             swp_pattern = re.compile(PATTERN_SWP)
             io_pattern = re.compile(PATTERN_IO)
+            nw_pattern = re.compile(PATTERN_NW)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -250,6 +255,22 @@ class Parser(object):
 
             for part in sar_parts:
 
+               # Try to match CPU usage SAR file sections
+                if (nw_pattern.search(part)):
+                    if (nw_usage == ''):
+                        nw_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__nw_fields = \
+                            self.__find_column(FIELDS_NW, first_line)
+
+                    else:
+                        nw_usage += "\n" + part
+
+            
                 # Try to match CPU usage SAR file sections
                 if (cpu_pattern.search(part)):
                     if (cpu_usage == ''):
