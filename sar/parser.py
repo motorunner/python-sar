@@ -36,6 +36,7 @@ class Parser(object):
         self.__filename = filename
         '''SAR output filename to be parsed'''
 
+
         self.__cpu_fields = None
         '''CPU fields indexes'''
         self.__mem_fields = None
@@ -73,7 +74,8 @@ class Parser(object):
                 "cpu": cpu_usage,
                 "mem": mem_usage,
                 "swap": swp_usage,
-                "io": io_usage
+                "io": io_usage,
+                "nw": nw_usage
             }
             del(cpu_usage)
             del(mem_usage)
@@ -257,6 +259,7 @@ class Parser(object):
 
                # Try to match NW usage SAR file sections
                 if (nw_pattern.search(part)):
+                    import pdb;pdb.set_trace()
                     if (nw_usage == ''):
                         nw_usage = part
                         try:
@@ -401,8 +404,9 @@ class Parser(object):
         '''
 
         pattern = ''
-
-        if (part_type == PART_CPU):
+        if (part_type == PART_NW):
+            pattern = PATTERN_NW
+        elif (part_type == PART_CPU):
             pattern = PATTERN_CPU
         elif (part_type == PART_MEM):
             pattern = PATTERN_MEM
@@ -472,7 +476,10 @@ class Parser(object):
                     # Common assigner
                     fields = None
                     pairs = None
-                    if part_type == PART_CPU:
+                    if part_type == PART_NW:
+                        fields = self.__nw_fields
+                        pairs = FIELD_PAIRS_NW
+                    elif part_type == PART_CPU:
                         fields = self.__cpu_fields
                         pairs = FIELD_PAIRS_CPU
                     elif part_type == PART_MEM:
@@ -496,8 +503,20 @@ class Parser(object):
                                 sectionname == 'swapfree' or \
                                 sectionname == 'swapused':
                             value = int(value)
+                        elif sectionname == 'IFACE':
+                            value = str(value)
                         else:
                             value = float(value)
+
+                        if part_type == PART_NW:
+                            iface = elems[1]
+                            try:
+                                blah = return_dict[full_time][iface]
+                                del(blah)
+                            except KeyError:
+                                return_dict[full_time][iface] = {}
+                            return_dict[full_time][iface][sectionname] = \
+                                value
 
                         if part_type == PART_CPU:
                             cpuid = elems[(1 if is_24hr is True else 2)]
