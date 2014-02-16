@@ -11,15 +11,16 @@ import pprint
 def main():
     from sar import parser
 
-    sysstat_dir = '/var/log/sa'
-    single_file = ('%s/%s' % (sysstat_dir, 'sar21'))
-
+    sysstat_dir = '/home/anandj/workspace/python-sar'
+    #sysstat_dir = '/var/log/sa'
+    single_file = ('%s/%s' % (sysstat_dir, 'sa14'))
+    print single_file
     # Single SAR file parsing
     insar = parser.Parser(single_file)
     print(("SAR file date: %s" % (insar.get_filedate())))
     print("Content:\n")
     pprint.pprint(insar.get_sar_info())
-
+    print insar.get_sar_info().keys()
     print(("-" * 78))
 
     # Id you want to test his, please run something like

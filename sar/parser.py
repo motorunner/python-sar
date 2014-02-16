@@ -6,10 +6,10 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, \
-    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, \
-    FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
-    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_NW, \
+    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_NW, \
+    FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, FIELDS_NW, \
+    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELD_PAIRS_NW
 import mmap
 import os
 import re
@@ -44,7 +44,7 @@ class Parser(object):
         '''Swap usage indexes'''
         self.__io_fields = None
         '''I/O usage indexes'''
-        
+
         self.__nw_fields = None
         ''' N/w usage indices '''
 
@@ -255,7 +255,7 @@ class Parser(object):
 
             for part in sar_parts:
 
-               # Try to match CPU usage SAR file sections
+               # Try to match NW usage SAR file sections
                 if (nw_pattern.search(part)):
                     if (nw_usage == ''):
                         nw_usage = part
@@ -270,7 +270,7 @@ class Parser(object):
                     else:
                         nw_usage += "\n" + part
 
-            
+
                 # Try to match CPU usage SAR file sections
                 if (cpu_pattern.search(part)):
                     if (cpu_usage == ''):
@@ -343,13 +343,14 @@ class Parser(object):
             mem_output = self.__split_info(mem_usage, PART_MEM)
             swp_output = self.__split_info(swp_usage, PART_SWP)
             io_output = self.__split_info(io_usage, PART_IO)
-
+            nw_output = self.__split_info(nw_usage, PART_NW)
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
+            del(nw_usage)
 
-            return (cpu_output, mem_output, swp_output, io_output)
+            return (cpu_output, mem_output, swp_output, io_output, nw_output)
 
         return (False, False, False)
 

@@ -32,6 +32,18 @@ FIELD_PAIRS_CPU = {
     'iowait': FIELDS_CPU[3], 'idle': FIELDS_CPU[4]
 }
 
+""" Network stats pattern for NW section HEADER """
+PATTERN_NW = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s.*"
+
+FIELDS_NW = [
+        '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
+        ]
+
+FIELD_PAIRS_NW = {
+    'IFACE': FIELDS_NW[0], 'rxpck/s': FIELDS_NW[1], 'txpck/s': FIELDS_NW[2], 'rxkB/s': FIELDS_NW[3],
+    'txkB/s':FIELDS_NW[4], 'rxcmp/s': FIELDS_NW[5], 'txcmp/s': FIELDS_NW[6], 'rxmcst/s': FIELDS_NW[7]
+
+    }
 """Mem usage regexp pattern for detecting SAR section header"""
 PATTERN_MEM = ".*kbmemfree.*kbmemused.*memused.*kbbuffers.*kbcached.*"
 
@@ -76,17 +88,7 @@ FIELD_PAIRS_IO = {
 
 }
 
-""" Network stats pattern for NW section HEADER """
-PATTERN_NW = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s"
-FIELDS_NW = [
-        '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
-        ]
-        
-FIELD_PAIRS_NW = {
-    'IFACE': FIELDS_NW[0], 'rxpck/s': FIELDS_NW[1], 'txpck/s': FIELDS_NW[2], 'rxkB/s': FIELDS_NW[3],
-    'txkB/s':FIELDS_NW[4], 'rxcmp/s': FIELDS_NW[5], 'txcmp/s': FIELDS_NW[6], 'rxmcst/s': FIELDS_NW[7]
-    
-    }
+
 
 """Restart time regexp pattern for detecting SAR restart notices"""
 PATTERN_RESTART = ".*LINUX\ RESTART.*"
@@ -98,7 +100,7 @@ PATTERN_MULTISPLIT = "Linux"
 PATTERN_DATE = "[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9]"
 
 __all__ = [
-    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO",
-    "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO",
+    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PART_NW",
+    "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO", "PATTERN_NW",
     "PATTERN_RESTART", "PATTERN_MULTISPLIT", "PATTERN_DATE"
 ]
