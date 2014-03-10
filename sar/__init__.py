@@ -13,6 +13,22 @@ PART_SWP = 2
 """I/O usage part of SAR file"""
 PART_IO = 3
 
+"""Proc Cswitch part of SAR file"""
+PART_PRCSW = 4
+
+"""Proc Cswitch regex pattern"""
+PATTERN_PRCSW = ".*proc\/s.*cswch\/s.*"
+
+"""Regex terms for finding fields in SAR parts for Proc Cswitch"""
+FIELD_PRCSW = [
+    'proc\/s', 'cswch\/s'
+]
+
+"""Pair regexp terms with field names in Proc Cswitch our dictionary"""
+FIELDS_PAIRS_PRCSW = { 
+    'proc':FIELD_PRCSW[0], 'cswch':FIELD_PRCSW[1]
+}
+
 """CPU regexp pattern for detecting SAR section header"""
 PATTERN_CPU = ".*CPU.*(usr|user).*nice.*sys.*"
 
@@ -81,7 +97,7 @@ PATTERN_MULTISPLIT = "Linux"
 PATTERN_DATE = "[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9]"
 
 __all__ = [
-    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO",
-    "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO",
+    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PATTERN_PRCSW", 
+    "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO", "PATTERN_PRCSW"
     "PATTERN_RESTART", "PATTERN_MULTISPLIT", "PATTERN_DATE"
 ]

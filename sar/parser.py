@@ -6,10 +6,10 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, \
-    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, \
-    FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
-    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, \
+    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
+    FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, FIELD_PRCSW, \
+    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW
 import mmap
 import os
 import re
@@ -44,6 +44,7 @@ class Parser(object):
         '''Swap usage indexes'''
         self.__io_fields = None
         '''I/O usage indexes'''
+        self.__prcsw_fields = None
 
         return None
 
@@ -60,7 +61,7 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage = \
+            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage = \
                 self._parse_file(searchunks)
 
             if (cpu_usage is False):
@@ -70,12 +71,14 @@ class Parser(object):
                 "cpu": cpu_usage,
                 "mem": mem_usage,
                 "swap": swp_usage,
-                "io": io_usage
+                "io": io_usage,
+                "prcsw":prcsw_usage
             }
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
+            del(prcsw_usage)
 
             return True
 
@@ -231,6 +234,7 @@ class Parser(object):
         mem_usage = ''
         swp_usage = ''
         io_usage = ''
+        prcsw_usage = ''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -240,6 +244,7 @@ class Parser(object):
             mem_pattern = re.compile(PATTERN_MEM)
             swp_pattern = re.compile(PATTERN_SWP)
             io_pattern = re.compile(PATTERN_IO)
+            prcsw_pattern = re.compile(PATTERN_PRCSW)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -308,6 +313,20 @@ class Parser(object):
                     else:
                         io_usage += "\n" + part
 
+                # Try to match Procs Cswitch usage SAR file sections 
+                if (prcsw_pattern.search(part)):
+                    if (prcsw_usage ==''):
+                        prcsw_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part  
+
+                        self.__prcsw_fields = \
+                            self.__find_column(FIELD_PRCSW, first_line)
+                    else:
+                        prcsw_usage += "\n" + part
+
                 # Try to match restart time
                 if (restart_pattern.search(part)):
                     pieces = part.split()
@@ -322,13 +341,15 @@ class Parser(object):
             mem_output = self.__split_info(mem_usage, PART_MEM)
             swp_output = self.__split_info(swp_usage, PART_SWP)
             io_output = self.__split_info(io_usage, PART_IO)
+            prcsw_output = self.__split_info(prcsw_usage, PART_PRCSW)
 
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
+            del(prcsw_usage)
 
-            return (cpu_output, mem_output, swp_output, io_output)
+            return (cpu_output, mem_output, swp_output, io_output, prcsw_output)
 
         return (False, False, False)
 
@@ -388,6 +409,8 @@ class Parser(object):
             pattern = PATTERN_SWP
         elif (part_type == PART_IO):
             pattern = PATTERN_IO
+        elif (part_type == PART_PRCSW):
+            pattern = PATTERN_PRCSW
 
         if (pattern == ''):
             return False
@@ -462,6 +485,10 @@ class Parser(object):
                     elif part_type == PART_IO:
                         fields = self.__io_fields
                         pairs = FIELD_PAIRS_IO
+                    elif part_type == PART_PRCSW:
+                        fields = self.__prcsw_fields
+                        pairs = FIELDS_PAIRS_PRCSW
+
 
                     for sectionname in pairs.iterkeys():
 
