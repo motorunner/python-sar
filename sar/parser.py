@@ -6,11 +6,11 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE,\
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE, PART_DENT,\
     PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
     PATTERN_PAGE, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
     FIELD_PRCSW, FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW, FIELD_PAGE, \
-    FIELDS_PAIRS_PAGE
+    FIELDS_PAIRS_PAGE, PATTERN_DENT, FIELD_DENT, FIELDS_PAIRS_DENT
 import mmap
 import os
 import re
@@ -48,6 +48,8 @@ class Parser(object):
         self.__prcsw_fields = None
         '''PAGE usage indexes'''
         self.__page_fields = None
+        '''Dir ent usage indexes'''
+        self.__dent_fields = None
 
         return None
 
@@ -64,7 +66,7 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage = \
+            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage, dent_usage = \
                 self._parse_file(searchunks)
 
             if (cpu_usage is False):
@@ -76,7 +78,8 @@ class Parser(object):
                 "swap": swp_usage,
                 "io": io_usage,
                 "prcsw":prcsw_usage,
-                "page":page_usage
+                "page":page_usage,
+                "dent":dent_usage
             }
             del(cpu_usage)
             del(mem_usage)
@@ -84,6 +87,7 @@ class Parser(object):
             del(io_usage)
             del(prcsw_usage)
             del(page_usage)
+            del(dent_usage)
 
             return True
 
@@ -245,6 +249,7 @@ class Parser(object):
         io_usage = ''
         prcsw_usage = ''
         page_usage =''
+        dent_usage =''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -256,6 +261,7 @@ class Parser(object):
             io_pattern = re.compile(PATTERN_IO)
             prcsw_pattern = re.compile(PATTERN_PRCSW)
             page_pattern = re.compile(PATTERN_PAGE)
+            dent_pattern = re.compile(PATTERN_DENT)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -352,6 +358,18 @@ class Parser(object):
                     else:
                         page_usage += "\n" + part
 
+                if (dent_pattern.search(part)):
+                    if( dent_usage ==''):
+                        dent_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        print first_line
+                        self.__dent_fields = \
+                            self.__find_column( FIELD_DENT, first_line)
+
                 # Try to match restart time
                 if (restart_pattern.search(part)):
                     pieces = part.split()
@@ -368,6 +386,7 @@ class Parser(object):
             io_output = self.__split_info(io_usage, PART_IO)
             prcsw_output = self.__split_info(prcsw_usage, PART_PRCSW)
             page_output = self.__split_info(page_usage, PART_PAGE)
+            dent_output = self.__split_info(dent_usage, PART_DENT)
 
             del(cpu_usage)
             del(mem_usage)
@@ -375,9 +394,10 @@ class Parser(object):
             del(io_usage)
             del(prcsw_usage)
             del(page_usage)
+            del(dent_usage)
 
             return (cpu_output, mem_output, swp_output, io_output, prcsw_output, \
-                    page_output)
+                    page_output, dent_output)
 
         return (False, False, False)
 
@@ -441,6 +461,8 @@ class Parser(object):
             pattern = PATTERN_PRCSW
         elif(part_type == PART_PAGE):
             pattern = PATTERN_PAGE
+        elif(part_type == PART_DENT):
+            pattern = PATTERN_DENT
 
         if (pattern == ''):
             return False
@@ -521,6 +543,9 @@ class Parser(object):
                     elif part_type == PART_PAGE:
                         fields = self.__page_fields
                         pairs = FIELDS_PAIRS_PAGE
+                    elif part_type == PART_DENT:
+                        fields = self.__dent_fields
+                        pairs = FIELDS_PAIRS_DENT
 
 
                     for sectionname in pairs.iterkeys():

@@ -19,6 +19,18 @@ PART_PRCSW = 4
 """Page part of SAR file"""
 PART_PAGE = 5
 
+PART_DENT = 6
+
+PATTERN_DENT =".*dentunusd.*file\-nr.*inode-nr.* pty-nr.*" 
+
+FIELD_DENT= [
+    'dentunusd', 'file\-nr', 'inode\-nr', 'pty\-nr'
+]
+
+FIELDS_PAIRS_DENT = { 
+    'dentunusd':FIELD_DENT[0], 'file':FIELD_DENT[1], 'inode':FIELD_DENT[2], 'pty':FIELD_DENT[3]
+}
+
 """Pagging regex pattern"""
 PATTERN_PAGE = ".*pgpgin\/s.*pgpgout\/s.*fault\/s.*majflt\/s.*pgfree\/s.*pgscank\/s.*pgscand\/s.*pgsteal\/s.*\%vmeff.*"
 
