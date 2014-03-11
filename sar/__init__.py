@@ -16,6 +16,25 @@ PART_IO = 3
 """Proc Cswitch part of SAR file"""
 PART_PRCSW = 4
 
+"""Page part of SAR file"""
+PART_PAGE = 5
+
+"""Pagging regex pattern"""
+PATTERN_PAGE = ".*pgpgin\/s.*pgpgout\/s.*fault\/s.*majflt\/s.*pgfree\/s.*pgscank\/s.*pgscand\/s.*pgsteal\/s.*\%vmeff.*"
+
+"""Regex terms for finding fields in SAR parts for Pagging"""
+FIELD_PAGE = [ 
+    'pgpgin\/s', 'pgpgin\/s', 'fault\/s', 'majflt\/s', 'pgfree\/s', 'pgscank\/s' ,'pgscand\/s', \
+    'pgsteal\/s', '\%vmeff'
+]
+
+"""Pair regexp terms for finding fields in SAR parts for Proc Pagging"""
+FIELDS_PAIRS_PAGE = { 
+    'pgpgin':FIELD_PAGE[0], 'pgpgout':FIELD_PAGE[1], 'fault':FIELD_PAGE[2], 
+    'majflt':FIELD_PAGE[3], 'pgfree':FIELD_PAGE[4], 'pgscank':FIELD_PAGE[5], 
+    'pgscand':FIELD_PAGE[6], 'pgsteal':FIELD_PAGE[4], 'vmeff':FIELD_PAGE[8]
+}
+
 """Proc Cswitch regex pattern"""
 PATTERN_PRCSW = ".*proc\/s.*cswch\/s.*"
 
@@ -97,7 +116,7 @@ PATTERN_MULTISPLIT = "Linux"
 PATTERN_DATE = "[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9]"
 
 __all__ = [
-    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PATTERN_PRCSW", 
+    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PART_PAGE", "PART_PRCSW", 
     "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO", "PATTERN_PRCSW"
-    "PATTERN_RESTART", "PATTERN_MULTISPLIT", "PATTERN_DATE"
+    "PATTERN_RESTART", "PATTERN_MULTISPLIT", "PATTERN_DATE", "PATTERN_PAGE"
 ]

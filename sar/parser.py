@@ -6,10 +6,11 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, \
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE,\
     PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
-    FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, FIELD_PRCSW, \
-    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW
+    PATTERN_PAGE, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
+    FIELD_PRCSW, FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW, FIELD_PAGE, \
+    FIELDS_PAIRS_PAGE
 import mmap
 import os
 import re
@@ -45,6 +46,8 @@ class Parser(object):
         self.__io_fields = None
         '''I/O usage indexes'''
         self.__prcsw_fields = None
+        '''PAGE usage indexes'''
+        self.__page_fields = None
 
         return None
 
@@ -61,7 +64,7 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage = \
+            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage = \
                 self._parse_file(searchunks)
 
             if (cpu_usage is False):
@@ -72,13 +75,15 @@ class Parser(object):
                 "mem": mem_usage,
                 "swap": swp_usage,
                 "io": io_usage,
-                "prcsw":prcsw_usage
+                "prcsw":prcsw_usage,
+                "page":page_usage
             }
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
             del(prcsw_usage)
+            del(page_usage)
 
             return True
 
@@ -176,6 +181,10 @@ class Parser(object):
                 oldchunkpos = 0
                 dlpos = sarmap.find("\n\n", 0)
                 size = 0
+                if (dlpos == -1):
+                    print 'Probably its a CRLF Windows file... '
+                    print 'run sed \'s/\\x0D$//\' sar.txt > sar.unix.txt before running sperf'
+                    return False 
 
                 if (data == ''):
                     # We can do mmap.size() only on read-only mmaps
@@ -235,6 +244,7 @@ class Parser(object):
         swp_usage = ''
         io_usage = ''
         prcsw_usage = ''
+        page_usage =''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -245,6 +255,7 @@ class Parser(object):
             swp_pattern = re.compile(PATTERN_SWP)
             io_pattern = re.compile(PATTERN_IO)
             prcsw_pattern = re.compile(PATTERN_PRCSW)
+            page_pattern = re.compile(PATTERN_PAGE)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -327,6 +338,20 @@ class Parser(object):
                     else:
                         prcsw_usage += "\n" + part
 
+                # Try to match Page usage SAR file sections
+                if (page_pattern.search(part)):
+                    if (page_usage ==''):
+                        page_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__page_fields = \
+                            self.__find_column( FIELD_PAGE, first_line)
+                    else:
+                        page_usage += "\n" + part
+
                 # Try to match restart time
                 if (restart_pattern.search(part)):
                     pieces = part.split()
@@ -342,14 +367,17 @@ class Parser(object):
             swp_output = self.__split_info(swp_usage, PART_SWP)
             io_output = self.__split_info(io_usage, PART_IO)
             prcsw_output = self.__split_info(prcsw_usage, PART_PRCSW)
+            page_output = self.__split_info(page_usage, PART_PAGE)
 
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
             del(prcsw_usage)
+            del(page_usage)
 
-            return (cpu_output, mem_output, swp_output, io_output, prcsw_output)
+            return (cpu_output, mem_output, swp_output, io_output, prcsw_output, \
+                    page_output)
 
         return (False, False, False)
 
@@ -411,6 +439,8 @@ class Parser(object):
             pattern = PATTERN_IO
         elif (part_type == PART_PRCSW):
             pattern = PATTERN_PRCSW
+        elif(part_type == PART_PAGE):
+            pattern = PATTERN_PAGE
 
         if (pattern == ''):
             return False
@@ -488,6 +518,9 @@ class Parser(object):
                     elif part_type == PART_PRCSW:
                         fields = self.__prcsw_fields
                         pairs = FIELDS_PAIRS_PRCSW
+                    elif part_type == PART_PAGE:
+                        fields = self.__page_fields
+                        pairs = FIELDS_PAIRS_PAGE
 
 
                     for sectionname in pairs.iterkeys():
