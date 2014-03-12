@@ -6,11 +6,12 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE, PART_DENT,\
-    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
-    PATTERN_PAGE, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
-    FIELD_PRCSW, FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW, FIELD_PAGE, \
-    FIELDS_PAIRS_PAGE, PATTERN_DENT, FIELD_DENT, FIELDS_PAIRS_DENT
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE, PART_DENT, PART_PAGESWAP, \
+    PART_RPCMADE, PART_RPCRCVD, PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
+    PATTERN_PAGE, PATTERN_PAGESWAP, PATTERN_RPCMADE, PATTERN_RPCRCVD, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, \
+    FIELD_PAIRS_MEM, FIELDS_SWP, FIELD_PRCSW, FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW, FIELD_PAGE, \
+    FIELDS_PAIRS_PAGE, PATTERN_DENT, FIELD_DENT, FIELDS_PAIRS_DENT, PART_RUNQ, PATTERN_RUNQ, FIELD_RUNQ, FIELD_PAIRS_RUNQ, \
+    FIELD_PAGESWAP, FIELDS_PAIRS_PAGESWAP, FIELD_RPCMADE, FIELDS_PAIRS_RPCMADE, FIELD_RPCRCVD, FIELDS_PAIRS_RPCRCVD
 import mmap
 import os
 import re
@@ -50,7 +51,14 @@ class Parser(object):
         self.__page_fields = None
         '''Dir ent usage indexes'''
         self.__dent_fields = None
-
+        '''Runq usage indexes'''
+        self.__runq_fields = None
+        '''PAGE SWAP usage indexes'''
+        self.__pageswap_fields = None
+        '''RPC requests/calls made per second usage indexes'''
+        self.__rpcmade_fields = None
+        '''RPC requests/calls received per second usage indexes'''
+        self.__rpcrcvd_fields = None
         return None
 
     def load_file(self):
@@ -66,8 +74,8 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage, dent_usage = \
-                self._parse_file(searchunks)
+            cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage, dent_usage, runq_usage, pageswap_usage, rpcmade_usage, \
+                rpcrcvd_usage =  self._parse_file(searchunks)
 
             if (cpu_usage is False):
                 return False
@@ -79,8 +87,12 @@ class Parser(object):
                 "io": io_usage,
                 "prcsw":prcsw_usage,
                 "page":page_usage,
-                "dent":dent_usage
-            }
+                "dent":dent_usage,
+                "runq":runq_usage,
+                "pageswap":pageswap_usage,
+                "rpcmade":rpcmade_usage,
+                "rpcrcvd":rpcrcvd_usage
+                }
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
@@ -88,6 +100,10 @@ class Parser(object):
             del(prcsw_usage)
             del(page_usage)
             del(dent_usage)
+            del(runq_usage)
+            del(pageswap_usage)
+            del(rpcmade_usage)
+            del(rpcrcvd_usage)
 
             return True
 
@@ -162,7 +178,7 @@ class Parser(object):
                     fhandle = -1
                     datalength = len(data)
                     dataprot = mmap.PROT_READ | mmap.PROT_WRITE
-
+ 
                 try:
                     sarmap = mmap.mmap(
                         fhandle, length=datalength, prot=dataprot
@@ -250,6 +266,10 @@ class Parser(object):
         prcsw_usage = ''
         page_usage =''
         dent_usage =''
+        runq_usage=''
+        pageswap_usage =''
+        rpcmade_usage =''
+        rpcrcvd_usage =''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -262,6 +282,10 @@ class Parser(object):
             prcsw_pattern = re.compile(PATTERN_PRCSW)
             page_pattern = re.compile(PATTERN_PAGE)
             dent_pattern = re.compile(PATTERN_DENT)
+            runq_pattern = re.compile(PATTERN_RUNQ)
+            pageswap_pattern = re.compile(PATTERN_PAGESWAP)
+            rpcmade_pattern = re.compile(PATTERN_RPCMADE)
+            rpcrcvd_pattern = re.compile(PATTERN_RPCRCVD)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -366,10 +390,67 @@ class Parser(object):
                         except IndexError:
                             first_line = part
 
-                        print first_line
                         self.__dent_fields = \
                             self.__find_column( FIELD_DENT, first_line)
+                    else:
+                        dent_usage += "\n" + part
 
+                if (runq_pattern.search(part)):
+                    if(runq_usage ==''):
+                        runq_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+                        
+                        self.__runq_fields = \
+                            self.__find_column( FIELD_RUNQ, first_line)
+                    else:
+                        runq_usage += "\n" + part 
+
+                if (pageswap_pattern.search(part)):
+                    if (pageswap_usage ==''):
+                         pageswap_usage = part
+                         try:
+                             first_line = part.split("\n")[0]
+                         except IndexError:
+                             first_line = part  
+
+                         self.__pageswap_fields = \
+                             self.__find_column(FIELD_PAGESWAP, first_line)
+                    else:
+                         pageswap_usage += "\n" + part
+
+                # Try to match RPC requests/calls made per second usage SAR file sections
+                if (rpcmade_pattern.search(part)):
+                    if (rpcmade_usage == ''):
+                        rpcmade_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__rpcmade_fields = \
+                            self.__find_column(FIELD_RPCMADE, first_line)
+
+                    else:
+                        rpcmade_usage += "\n" + part
+                
+                # Try to match RPC requests/calls received per second usage SAR file sections
+                if (rpcrcvd_pattern.search(part)):
+                    if (rpcrcvd_usage == ''):
+                        rpcrcvd_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__rpcrcvd_fields = \
+                            self.__find_column(FIELD_RPCRCVD, first_line)
+
+                    else:
+                        rpcrcvd_usage += "\n" + part
+ 
                 # Try to match restart time
                 if (restart_pattern.search(part)):
                     pieces = part.split()
@@ -387,6 +468,10 @@ class Parser(object):
             prcsw_output = self.__split_info(prcsw_usage, PART_PRCSW)
             page_output = self.__split_info(page_usage, PART_PAGE)
             dent_output = self.__split_info(dent_usage, PART_DENT)
+            runq_output = self.__split_info(runq_usage, PART_RUNQ)
+            pageswap_output = self.__split_info(pageswap_usage, PART_PAGESWAP)
+            rpcmade_output = self.__split_info(rpcmade_usage, PART_RPCMADE)
+            rpcrcvd_output = self.__split_info(rpcrcvd_usage, PART_RPCRCVD)
 
             del(cpu_usage)
             del(mem_usage)
@@ -395,9 +480,13 @@ class Parser(object):
             del(prcsw_usage)
             del(page_usage)
             del(dent_usage)
+            del(runq_usage)
+            del(pageswap_usage)
+            del(rpcmade_usage)
+            del(rpcrcvd_usage)
 
             return (cpu_output, mem_output, swp_output, io_output, prcsw_output, \
-                    page_output, dent_output)
+                    page_output, dent_output, runq_output, pageswap_output, rpcmade_output, rpcrcvd_output)
 
         return (False, False, False)
 
@@ -463,7 +552,14 @@ class Parser(object):
             pattern = PATTERN_PAGE
         elif(part_type == PART_DENT):
             pattern = PATTERN_DENT
-
+        elif(part_type == PART_RUNQ):
+            pattern = PATTERN_RUNQ
+        elif(part_type == PART_PAGESWAP):
+            pattern = PATTERN_PAGESWAP
+        elif(part_type == PART_RPCMADE):
+            pattern = PATTERN_RPCMADE
+        elif(part_type == PART_RPCRCVD):
+            pattern = PATTERN_RPCRCVD
         if (pattern == ''):
             return False
 
@@ -546,7 +642,18 @@ class Parser(object):
                     elif part_type == PART_DENT:
                         fields = self.__dent_fields
                         pairs = FIELDS_PAIRS_DENT
-
+                    elif part_type == PART_RUNQ:
+                        fields = self.__runq_fields
+                        pairs = FIELD_PAIRS_RUNQ
+                    elif part_type == PART_PAGESWAP:
+                        fields = self.__pageswap_fields
+                        pairs = FIELDS_PAIRS_PAGESWAP
+                    elif part_type == PART_RPCMADE:
+                        fields = self.__rpcmade_fields
+                        pairs = FIELDS_PAIRS_RPCMADE
+                    elif part_type == PART_RPCRCVD:
+                        fields = self.__rpcrcvd_fields
+                        pairs = FIELDS_PAIRS_RPCRCVD
 
                     for sectionname in pairs.iterkeys():
 

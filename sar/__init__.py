@@ -19,7 +19,74 @@ PART_PRCSW = 4
 """Page part of SAR file"""
 PART_PAGE = 5
 
+"""Dirent part of SAR file """
 PART_DENT = 6
+
+"""Runq part of SAR file """
+PART_RUNQ = 7
+
+"""Page Swap in and swap out part of SAR file"""
+PART_PAGESWAP = 8
+
+"""Number of RPC requests/calls made per second part of SAR file"""
+PART_RPCMADE = 9
+
+"""Number of RPC requests/calls received per second part of SAR file"""
+PART_RPCRCVD = 10
+
+""" RPC requests/calls received per second regex pattern"""
+PATTERN_RPCRCVD = ".*scall\/s.*badcall\/s.*packet\/s.*udp\/s.*tcp\/s.*hit\/s.*miss\/s.*sread\/s.*swrite\/s.*saccess\/s.*sgetatt\/s.*"
+
+"""Regex terms for finding fields in SAR parts for RPC requests/calls received per second """
+FIELD_RPCRCVD = [ 
+    'scall\/s', 'badcall\/s', 'packet\/s', 'udp\/s', 'tcp\/s', 'hit\/s', 'miss\/s', 'sread\/s', 'swrite\/s', 'saccess\/s', 'sgetatt\/s'
+]
+
+"""Pair regexp terms for finding fields in SAR parts for RPC requests/calls received per second """
+FIELDS_PAIRS_RPCRCVD = { 
+    'scall':FIELD_RPCRCVD[0], 'badcall':FIELD_RPCRCVD[1], 'packet':FIELD_RPCRCVD[2], 
+    'udp':FIELD_RPCRCVD[3], 'tcp':FIELD_RPCRCVD[4], 'hit':FIELD_RPCRCVD[5],
+    'miss':FIELD_RPCRCVD[6], 'sread':FIELD_RPCRCVD[7], 'swrite':FIELD_RPCRCVD[8],
+    'saccess':FIELD_RPCRCVD[9], 'sgetatt':FIELD_RPCRCVD[10]
+}
+
+""" RPC requests/calls  made per second regex pattern"""
+PATTERN_RPCMADE = ".*call\/s.*retrans\/s.*read\/s.*write\/s.*access\/s.*getatt\/s.*"
+
+"""Regex terms for finding fields in SAR parts for RPC requests/calls made per second """
+FIELD_RPCMADE = [ 
+    'call\/s', 'retrans\/s', 'read\/s', 'write\/s', 'access\/s', 'getatt\/s'
+]
+
+"""Pair regexp terms for finding fields in SAR parts for RPC requests/calls made per second """
+FIELDS_PAIRS_RPCMADE = { 
+    'call':FIELD_RPCMADE[0], 'retrans':FIELD_RPCMADE[1], 'read':FIELD_RPCMADE[2], 
+    'write':FIELD_RPCMADE[3], 'access':FIELD_RPCMADE[4], 'getatt':FIELD_RPCMADE[5]
+}
+
+"""Page Swap in and swap out regex pattern"""
+PATTERN_PAGESWAP = ".*pswpin\/s.*pswpout\/s.*"
+
+"""Regex terms for finding fields in SAR parts for Page Swap in and swap out"""
+FIELD_PAGESWAP = [
+    'pswpin\/s', 'pswpout\/s'
+]
+
+"""Pair regexp terms with field names in Page Swap in and swap out our dictionary"""
+FIELDS_PAIRS_PAGESWAP = { 
+    'pswpin':FIELD_PAGESWAP[0], 'pswpout':FIELD_PAGESWAP[1]
+}
+
+PATTERN_RUNQ = ".*runq\-sz.*plist\-sz.*ldavg\-1.*ldavg\-5.*ldavg\-15.*"
+
+FIELD_RUNQ = [ 
+    'runq\-sz', 'plist\-sz', 'ldavg\-1', 'ldavg\-5'
+]
+
+FIELD_PAIRS_RUNQ = {
+    'runq':FIELD_RUNQ[0], 'plist':FIELD_RUNQ[1], 'ldavg1':FIELD_RUNQ[2],
+    'ldavg5':FIELD_RUNQ[3]
+}
 
 PATTERN_DENT =".*dentunusd.*file\-nr.*inode-nr.* pty-nr.*" 
 
@@ -36,7 +103,7 @@ PATTERN_PAGE = ".*pgpgin\/s.*pgpgout\/s.*fault\/s.*majflt\/s.*pgfree\/s.*pgscank
 
 """Regex terms for finding fields in SAR parts for Pagging"""
 FIELD_PAGE = [ 
-    'pgpgin\/s', 'pgpgin\/s', 'fault\/s', 'majflt\/s', 'pgfree\/s', 'pgscank\/s' ,'pgscand\/s', \
+    'pgpgin\/s', 'pgpgout\/s', 'fault\/s', 'majflt\/s', 'pgfree\/s', 'pgscank\/s' ,'pgscand\/s', \
     'pgsteal\/s', '\%vmeff'
 ]
 
@@ -44,7 +111,7 @@ FIELD_PAGE = [
 FIELDS_PAIRS_PAGE = { 
     'pgpgin':FIELD_PAGE[0], 'pgpgout':FIELD_PAGE[1], 'fault':FIELD_PAGE[2], 
     'majflt':FIELD_PAGE[3], 'pgfree':FIELD_PAGE[4], 'pgscank':FIELD_PAGE[5], 
-    'pgscand':FIELD_PAGE[6], 'pgsteal':FIELD_PAGE[4], 'vmeff':FIELD_PAGE[8]
+    'pgscand':FIELD_PAGE[6], 'pgsteal':FIELD_PAGE[7], 'vmeff':FIELD_PAGE[8]
 }
 
 """Proc Cswitch regex pattern"""
@@ -128,7 +195,9 @@ PATTERN_MULTISPLIT = "Linux"
 PATTERN_DATE = "[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9]"
 
 __all__ = [
-    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PART_PAGE", "PART_PRCSW", 
-    "PATTERN_CPU", "PATTERN_MEM", "PATTERN_SWP", "PATTERN_IO", "PATTERN_PRCSW"
-    "PATTERN_RESTART", "PATTERN_MULTISPLIT", "PATTERN_DATE", "PATTERN_PAGE"
+    "PART_CPU", "PART_MEM", "PART_SWP", "PART_IO", "PART_PAGE", "PART_PRCSW", "PART_RUNQ", 
+    "PART_DENT", "PART_PAGESWAP", "PART_RPCMADE", "PART_RPCRCVD","PATTERN_CPU", "PATTERN_MEM", 
+    "PATTERN_SWP", "PATTERN_IO", "PATTERN_PRCSW", "PATTERN_RESTART", "PATTERN_MULTISPLIT",
+    "PATTERN_DATE", "PATTERN_PAGE", "PATTERN_DENT", "PATTERN_RUNQ", "PATTERN_PAGESWAP", 
+    "PATTERN_RPCMADE", "PATTERN_RPCRCVD"
 ]
