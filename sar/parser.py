@@ -6,12 +6,12 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE, PART_DENT, PART_PAGESWAP, \
-    PART_RPCMADE, PART_RPCRCVD, PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, \
-    PATTERN_PAGE, PATTERN_PAGESWAP, PATTERN_RPCMADE, PATTERN_RPCRCVD, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, \
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PRCSW, PART_PAGE, PART_DENT, PART_PAGESWAP, PART_NW,\
+    PART_RPCMADE, PART_RPCRCVD, PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_RESTART, PATTERN_PRCSW, PATTERN_NW,\
+    PATTERN_PAGE, PATTERN_PAGESWAP, PATTERN_RPCMADE, PATTERN_RPCRCVD, FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELDS_NW,\
     FIELD_PAIRS_MEM, FIELDS_SWP, FIELD_PRCSW, FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAIRS_PRCSW, FIELD_PAGE, \
     FIELDS_PAIRS_PAGE, PATTERN_DENT, FIELD_DENT, FIELDS_PAIRS_DENT, PART_RUNQ, PATTERN_RUNQ, FIELD_RUNQ, FIELD_PAIRS_RUNQ, \
-    FIELD_PAGESWAP, FIELDS_PAIRS_PAGESWAP, FIELD_RPCMADE, FIELDS_PAIRS_RPCMADE, FIELD_RPCRCVD, FIELDS_PAIRS_RPCRCVD
+    FIELD_PAGESWAP, FIELDS_PAIRS_PAGESWAP, FIELD_RPCMADE, FIELDS_PAIRS_RPCMADE, FIELD_RPCRCVD, FIELDS_PAIRS_RPCRCVD, FIELD_PAIRS_NW
 import mmap
 import os
 import re
@@ -38,6 +38,7 @@ class Parser(object):
         self.__filename = filename
         '''SAR output filename to be parsed'''
 
+
         self.__cpu_fields = None
         '''CPU fields indexes'''
         self.__mem_fields = None
@@ -59,6 +60,10 @@ class Parser(object):
         self.__rpcmade_fields = None
         '''RPC requests/calls received per second usage indexes'''
         self.__rpcrcvd_fields = None
+
+        self.__nw_fields = None
+        ''' N/w usage indices '''
+
         return None
 
     def load_file(self):
@@ -75,7 +80,7 @@ class Parser(object):
 
             # And then we parse pieces into meaningful data
             cpu_usage, mem_usage, swp_usage, io_usage, prcsw_usage, page_usage, dent_usage, runq_usage, pageswap_usage, rpcmade_usage, \
-                rpcrcvd_usage =  self._parse_file(searchunks)
+                rpcrcvd_usage, nw_usage =  self._parse_file(searchunks)
 
             if (cpu_usage is False):
                 return False
@@ -91,8 +96,10 @@ class Parser(object):
                 "runq":runq_usage,
                 "pageswap":pageswap_usage,
                 "rpcmade":rpcmade_usage,
-                "rpcrcvd":rpcrcvd_usage
+                "rpcrcvd":rpcrcvd_usage,
+                "nw": nw_usage
                 }
+
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
@@ -270,6 +277,7 @@ class Parser(object):
         pageswap_usage =''
         rpcmade_usage =''
         rpcrcvd_usage =''
+        nw_usage = ''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -286,6 +294,7 @@ class Parser(object):
             pageswap_pattern = re.compile(PATTERN_PAGESWAP)
             rpcmade_pattern = re.compile(PATTERN_RPCMADE)
             rpcrcvd_pattern = re.compile(PATTERN_RPCRCVD)
+            nw_pattern = re.compile(PATTERN_NW)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -295,6 +304,23 @@ class Parser(object):
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
 
             for part in sar_parts:
+
+               # Try to match NW usage SAR file sections
+                if (nw_pattern.search(part)):
+                    #import pdb;pdb.set_trace()
+                    if (nw_usage == ''):
+                        nw_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__nw_fields = \
+                            self.__find_column(FIELDS_NW, first_line)
+
+                    else:
+                        nw_usage += "\n" + part
+
 
                 # Try to match CPU usage SAR file sections
                 if (cpu_pattern.search(part)):
@@ -472,6 +498,7 @@ class Parser(object):
             pageswap_output = self.__split_info(pageswap_usage, PART_PAGESWAP)
             rpcmade_output = self.__split_info(rpcmade_usage, PART_RPCMADE)
             rpcrcvd_output = self.__split_info(rpcrcvd_usage, PART_RPCRCVD)
+            nw_output = self.__split_info(nw_usage, PART_NW)
 
             del(cpu_usage)
             del(mem_usage)
@@ -484,9 +511,10 @@ class Parser(object):
             del(pageswap_usage)
             del(rpcmade_usage)
             del(rpcrcvd_usage)
+            del(nw_usage)
 
             return (cpu_output, mem_output, swp_output, io_output, prcsw_output, \
-                    page_output, dent_output, runq_output, pageswap_output, rpcmade_output, rpcrcvd_output)
+                    page_output, dent_output, runq_output, pageswap_output, rpcmade_output, rpcrcvd_output, nw_output)
 
         return (False, False, False)
 
@@ -537,8 +565,9 @@ class Parser(object):
         '''
 
         pattern = ''
-
-        if (part_type == PART_CPU):
+        if (part_type == PART_NW):
+            pattern = PATTERN_NW
+        elif (part_type == PART_CPU):
             pattern = PATTERN_CPU
         elif (part_type == PART_MEM):
             pattern = PATTERN_MEM
@@ -621,7 +650,10 @@ class Parser(object):
                     # Common assigner
                     fields = None
                     pairs = None
-                    if part_type == PART_CPU:
+                    if part_type == PART_NW:
+                        fields = self.__nw_fields
+                        pairs = FIELD_PAIRS_NW
+                    elif part_type == PART_CPU:
                         fields = self.__cpu_fields
                         pairs = FIELD_PAIRS_CPU
                     elif part_type == PART_MEM:
@@ -666,8 +698,20 @@ class Parser(object):
                                 sectionname == 'swapfree' or \
                                 sectionname == 'swapused':
                             value = int(value)
+                        elif sectionname == 'IFACE':
+                            value = str(value)
                         else:
                             value = float(value)
+
+                        if part_type == PART_NW:
+                            iface = elems[1]
+                            try:
+                                blah = return_dict[full_time][iface]
+                                del(blah)
+                            except KeyError:
+                                return_dict[full_time][iface] = {}
+                            return_dict[full_time][iface][sectionname] = \
+                                value
 
                         if part_type == PART_CPU:
                             cpuid = elems[(1 if is_24hr is True else 2)]

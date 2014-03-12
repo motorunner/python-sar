@@ -34,6 +34,9 @@ PART_RPCMADE = 9
 """Number of RPC requests/calls received per second part of SAR file"""
 PART_RPCRCVD = 10
 
+""" Network part of the SAR file"""
+PART_NW = 11
+
 """ RPC requests/calls received per second regex pattern"""
 PATTERN_RPCRCVD = ".*scall\/s.*badcall\/s.*packet\/s.*udp\/s.*tcp\/s.*hit\/s.*miss\/s.*sread\/s.*swrite\/s.*saccess\/s.*sgetatt\/s.*"
 
@@ -141,6 +144,18 @@ FIELD_PAIRS_CPU = {
     'iowait': FIELDS_CPU[3], 'idle': FIELDS_CPU[4]
 }
 
+""" Network stats pattern for NW section HEADER """
+PATTERN_NW = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s.*"
+
+FIELDS_NW = [
+        '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
+        ]
+
+FIELD_PAIRS_NW = {
+    'IFACE': FIELDS_NW[0], 'rxpck/s': FIELDS_NW[1], 'txpck/s': FIELDS_NW[2], 'rxkB/s': FIELDS_NW[3],
+    'txkB/s':FIELDS_NW[4], 'rxcmp/s': FIELDS_NW[5], 'txcmp/s': FIELDS_NW[6], 'rxmcst/s': FIELDS_NW[7]
+
+    }
 """Mem usage regexp pattern for detecting SAR section header"""
 PATTERN_MEM = ".*kbmemfree.*kbmemused.*memused.*kbbuffers.*kbcached.*"
 
@@ -185,6 +200,8 @@ FIELD_PAIRS_IO = {
 
 }
 
+
+
 """Restart time regexp pattern for detecting SAR restart notices"""
 PATTERN_RESTART = ".*LINUX\ RESTART.*"
 
@@ -199,5 +216,5 @@ __all__ = [
     "PART_DENT", "PART_PAGESWAP", "PART_RPCMADE", "PART_RPCRCVD","PATTERN_CPU", "PATTERN_MEM", 
     "PATTERN_SWP", "PATTERN_IO", "PATTERN_PRCSW", "PATTERN_RESTART", "PATTERN_MULTISPLIT",
     "PATTERN_DATE", "PATTERN_PAGE", "PATTERN_DENT", "PATTERN_RUNQ", "PATTERN_PAGESWAP", 
-    "PATTERN_RPCMADE", "PATTERN_RPCRCVD"
+    "PATTERN_RPCMADE", "PATTERN_RPCRCVD","PART_NW", "PATTERN_NW"
 ]
