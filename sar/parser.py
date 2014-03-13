@@ -111,6 +111,7 @@ class Parser(object):
             del(pageswap_usage)
             del(rpcmade_usage)
             del(rpcrcvd_usage)
+            del(nw_usage)
 
             return True
 
@@ -698,30 +699,33 @@ class Parser(object):
                                 sectionname == 'swapfree' or \
                                 sectionname == 'swapused':
                             value = int(value)
-                        elif sectionname == 'IFACE':
-                            value = str(value)
+                        #elif sectionname == 'IFACE':
+                        #    value = str(value)
                         else:
                             value = float(value)
 
                         if part_type == PART_NW:
-                            iface = elems[1]
+                            iface = elems[(1 if is_24hr is True else 2)]
                             try:
                                 blah = return_dict[full_time][iface]
                                 del(blah)
                             except KeyError:
                                 return_dict[full_time][iface] = {}
+                        
                             return_dict[full_time][iface][sectionname] = \
                                 value
-
-                        if part_type == PART_CPU:
+                        
+                        elif part_type == PART_CPU:
                             cpuid = elems[(1 if is_24hr is True else 2)]
                             try:
                                 blah = return_dict[full_time][cpuid]
                                 del(blah)
                             except KeyError:
                                 return_dict[full_time][cpuid] = {}
+
                             return_dict[full_time][cpuid][sectionname] = \
                                 value
+
                         else:
                             return_dict[full_time][sectionname] = value
 

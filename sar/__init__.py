@@ -148,12 +148,12 @@ FIELD_PAIRS_CPU = {
 PATTERN_NW = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s.*"
 
 FIELDS_NW = [
-        '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
+        'rxpck\/s', 'txpck\/s', 'rxkB\/s', 'txkB\/s', 'rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
         ]
 
 FIELD_PAIRS_NW = {
-    'IFACE': FIELDS_NW[0], 'rxpck/s': FIELDS_NW[1], 'txpck/s': FIELDS_NW[2], 'rxkB/s': FIELDS_NW[3],
-    'txkB/s':FIELDS_NW[4], 'rxcmp/s': FIELDS_NW[5], 'txcmp/s': FIELDS_NW[6], 'rxmcst/s': FIELDS_NW[7]
+    'rxpck': FIELDS_NW[0], 'txpck': FIELDS_NW[1], 'rxkB': FIELDS_NW[2],
+    'txkB':FIELDS_NW[3], 'rxcmp': FIELDS_NW[4], 'txcmp': FIELDS_NW[5], 'rxmcst': FIELDS_NW[6]
 
     }
 """Mem usage regexp pattern for detecting SAR section header"""
